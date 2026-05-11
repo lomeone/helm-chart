@@ -244,6 +244,8 @@ workload:
 - `strategy.rollingUpdate`
 - `strategy.canary`
 - `strategy.blueGreen`
+- `strategy.canary.analysis`
+- `strategy.canary.analysisTemplates`
 
 예상 구조:
 
@@ -262,7 +264,12 @@ workload:
         canaryService: ""
         trafficRouting: {}
         steps: []
-        analysis: {}
+        analysis:
+          enabled: false
+          templates: []
+          args: []
+          startingStep: null
+        analysisTemplates: []
       blueGreen:
         activeService: ""
         previewService: ""
@@ -415,6 +422,7 @@ Inbound authorization policy 지원 항목:
 - internal route와 external route는 독립적으로 켜고 끌 수 있어야 한다.
 - GatewayClass/Gateway 자체는 chart 외부에서 관리한다.
 - canary/blue-green 전략에서 필요한 service 참조와 route backend 조정이 가능해야 한다.
+- canary 전략에서 `stableService` 또는 `canaryService`를 지정하면 chart가 필요한 Service를 생성할 수 있어야 한다.
 - values에서는 Istio `AuthorizationPolicy` 같은 구현체 이름을 직접 노출하지 않는다.
 - 현재 인프라에서는 inbound authorization policy가 Istio 리소스로 렌더링될 수 있다.
 - 다른 인프라에서는 같은 values contract를 Linkerd policy 또는 다른 L7 policy 리소스로 렌더링할 수 있어야 한다.
@@ -565,7 +573,12 @@ workload:
         canaryService: ""
         trafficRouting: {}
         steps: []
-        analysis: {}
+        analysis:
+          enabled: false
+          templates: []
+          args: []
+          startingStep: null
+        analysisTemplates: []
       blueGreen:
         activeService: ""
         previewService: ""
@@ -676,11 +689,13 @@ config:
     │   ├── externalsecret.yaml
     │   ├── hpa.yaml
     │   ├── pdb.yaml
+    │   ├── analysis-templates.yaml
     │   ├── inbound-authorization-policy.yaml
     │   └── tests
     │       └── test-connection.yaml
     └── examples
         ├── application.yaml
+        ├── canary-analysis.yaml
         └── stateful.yaml
 ```
 

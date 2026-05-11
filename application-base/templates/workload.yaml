@@ -39,9 +39,19 @@ spec:
       steps:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.workload.stateless.strategy.canary.analysis }}
+      {{- if .Values.workload.stateless.strategy.canary.analysis.enabled }}
       analysis:
-        {{- toYaml . | nindent 8 }}
+        {{- with .Values.workload.stateless.strategy.canary.analysis.templates }}
+        templates:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.workload.stateless.strategy.canary.analysis.args }}
+        args:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- if ne .Values.workload.stateless.strategy.canary.analysis.startingStep nil }}
+        startingStep: {{ .Values.workload.stateless.strategy.canary.analysis.startingStep }}
+        {{- end }}
       {{- end }}
     {{- else if eq .Values.workload.stateless.strategy.type "blueGreen" }}
     blueGreen:

@@ -21,7 +21,12 @@ workload:
         canaryService: ""
         trafficRouting: {}
         steps: []
-        analysis: {}
+        analysis:
+          enabled: false
+          templates: []
+          args: []
+          startingStep: null
+        analysisTemplates: []
       blueGreen:
         activeService: ""
         previewService: ""

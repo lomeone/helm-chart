@@ -48,4 +48,53 @@ spec:
     {{- toYaml .Values.network.service.ports | nindent 4 }}
     {{- end }}
 {{- end }}
-
+{{- if and (eq .Values.workload.type "stateless") (eq .Values.workload.stateless.strategy.type "canary") .Values.workload.stateless.strategy.canary.stableService (ne .Values.workload.stateless.strategy.canary.stableService (include "application-base.fullname" .)) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.workload.stateless.strategy.canary.stableService }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+    app.kubernetes.io/service-role: stable
+    {{- with .Values.network.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- $annotations := merge (.Values.network.service.annotations | default dict) (.Values.commonAnnotations | default dict) }}
+  {{- with $annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.network.service.type }}
+  sessionAffinity: {{ .Values.network.service.sessionAffinity }}
+  selector:
+    {{- include "application-base.selectorLabels" . | nindent 4 }}
+  ports:
+    {{- toYaml .Values.network.service.ports | nindent 4 }}
+{{- end }}
+{{- if and (eq .Values.workload.type "stateless") (eq .Values.workload.stateless.strategy.type "canary") .Values.workload.stateless.strategy.canary.canaryService (ne .Values.workload.stateless.strategy.canary.canaryService (include "application-base.fullname" .)) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.workload.stateless.strategy.canary.canaryService }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+    app.kubernetes.io/service-role: canary
+    {{- with .Values.network.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- $annotations := merge (.Values.network.service.annotations | default dict) (.Values.commonAnnotations | default dict) }}
+  {{- with $annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.network.service.type }}
+  sessionAffinity: {{ .Values.network.service.sessionAffinity }}
+  selector:
+    {{- include "application-base.selectorLabels" . | nindent 4 }}
+  ports:
+    {{- toYaml .Values.network.service.ports | nindent 4 }}
+{{- end }}

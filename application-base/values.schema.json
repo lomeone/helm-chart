@@ -43,7 +43,24 @@
               "type": "object",
               "additionalProperties": true,
               "properties": {
-                "type": { "type": "string", "enum": ["rollingUpdate", "canary", "blueGreen"] }
+                "type": { "type": "string", "enum": ["rollingUpdate", "canary", "blueGreen"] },
+                "canary": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "analysis": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "properties": {
+                        "enabled": { "type": "boolean" },
+                        "templates": { "type": "array" },
+                        "args": { "type": "array" },
+                        "startingStep": { "type": ["integer", "null"], "minimum": 0 }
+                      }
+                    },
+                    "analysisTemplates": { "type": "array" }
+                  }
+                }
               }
             }
           }

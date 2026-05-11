@@ -19,6 +19,7 @@ The chart is intended to be reused across applications. Users configure applicat
 
 - Chart path: `application-base/`
 - Stateless workload implementation: Argo Rollouts `Rollout`
+- Canary analysis implementation: Argo Rollouts `AnalysisTemplate`
 - Stateful workload implementation: Kubernetes `StatefulSet`
 - HTTP routing: Gateway API `HTTPRoute`
 - gRPC routing: Gateway API `GRPCRoute`

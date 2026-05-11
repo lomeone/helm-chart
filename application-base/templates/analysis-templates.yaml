@@ -1,0 +1,27 @@
+{{- if and .Values.workload.enabled (eq .Values.workload.type "stateless") .Values.workload.stateless.strategy.canary.analysisTemplates }}
+{{- $root := . -}}
+{{- range .Values.workload.stateless.strategy.canary.analysisTemplates }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ default (printf "%s-%s" (include "application-base.fullname" $root) (default "canary" .nameSuffix)) .name }}
+  labels:
+    {{- include "application-base.labels" $root | nindent 4 }}
+    {{- with .labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- $annotations := merge (.annotations | default dict) ($root.Values.commonAnnotations | default dict) }}
+  {{- with $annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .args }}
+  args:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  metrics:
+    {{- toYaml (required "workload.stateless.strategy.canary.analysisTemplates[].metrics is required" .metrics) | nindent 4 }}
+{{- end }}
+{{- end }}
