@@ -141,6 +141,7 @@ chart는 다음을 지원해야 한다.
 - container security context
 - volumes
 - volumeMounts
+- stateless workload options
 - stateful workload options
 
 지원 workload:
@@ -155,7 +156,7 @@ chart는 다음을 지원해야 한다.
 - stateful application은 내부 구현에서 Kubernetes `StatefulSet` 중심으로 렌더링된다.
 - Kubernetes `Deployment`는 기본 구현 대상으로 보지 않는다.
 - Kubernetes `ReplicaSet`은 보통 `Deployment` 또는 다른 controller가 관리하는 하위 리소스이므로, chart 사용자-facing workload type으로 직접 노출하지 않는다.
-- rolling update, canary, blue-green은 `workload.strategy.type`으로 표현하고, 실제 구현체는 chart 내부 템플릿이 결정한다.
+- rolling update, canary, blue-green은 `workload.stateless.strategy.type`으로 표현하고, 실제 구현체는 chart 내부 템플릿이 결정한다.
 
 ### 10.1 Autoscaling
 
@@ -183,9 +184,9 @@ chart는 다음을 지원해야 한다.
 - minAvailable
 - maxUnavailable
 
-### 10.3 Deployment Strategy
+### 10.3 Stateless Deployment Strategy
 
-`workload.strategy`는 배포 전략을 담당한다.
+`workload.stateless.strategy`는 stateless workload의 배포 전략을 담당한다.
 
 지원 전략:
 
@@ -214,8 +215,9 @@ chart는 다음을 지원해야 한다.
 ```yaml
 workload:
   type: stateless
-  strategy:
-    type: rollingUpdate
+  stateless:
+    strategy:
+      type: rollingUpdate
 ```
 
 이유:
@@ -231,7 +233,42 @@ workload:
 - values contract는 Argo Rollouts에 직접 종속되지 않도록 유지한다.
 - canary/blue-green 전략을 선택한 경우 chart 내부에서는 Argo Rollouts 리소스로 렌더링한다.
 
-### 10.5 Stateful Options
+### 10.5 Stateless Options
+
+`workload.stateless`는 `workload.type: stateless`일 때 stateless workload 전용 설정을 담당한다.
+
+지원 항목:
+
+- `strategy.type`: `rollingUpdate`, `canary`, `blueGreen`
+- `strategy.rollingUpdate`
+- `strategy.canary`
+- `strategy.blueGreen`
+
+예상 구조:
+
+```yaml
+workload:
+  type: stateless
+  stateless:
+    strategy:
+      type: rollingUpdate
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      canary:
+        stableService: ""
+        canaryService: ""
+        trafficRouting: {}
+        steps: []
+        analysis: {}
+      blueGreen:
+        activeService: ""
+        previewService: ""
+        autoPromotionEnabled: true
+        scaleDownDelaySeconds: 30
+```
+
+### 10.6 Stateful Options
 
 `workload.stateful`은 `workload.type: stateful`일 때 StatefulSet 전용 설정을 담당한다.
 
@@ -255,7 +292,7 @@ workload:
     volumeClaimTemplates: []
 ```
 
-### 10.6 Security Context Placement
+### 10.7 Security Context Placement
 
 security context는 초기 설계에서 별도 top-level 섹션으로 분리하지 않고 `workload` 안에 둔다.
 
@@ -277,7 +314,7 @@ workload:
 
 추후 Pod Security Admission, policy engine, 표준 security profile 같은 요구가 커지면 `security` top-level 섹션 분리를 재검토한다.
 
-### 10.7 Volume Placement
+### 10.8 Volume Placement
 
 volume과 volumeMount는 초기 설계에서 별도 top-level 섹션으로 분리하지 않고 `workload` 안에 둔다.
 
@@ -518,8 +555,6 @@ workload:
     repository: ""
     tag: ""
     pullPolicy: IfNotPresent
-  strategy:
-    type: rollingUpdate
   autoscaling:
     enabled: false
     minReplicas: 2
@@ -538,6 +573,23 @@ workload:
   affinity: {}
   volumes: []
   volumeMounts: []
+  stateless:
+    strategy:
+      type: rollingUpdate
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      canary:
+        stableService: ""
+        canaryService: ""
+        trafficRouting: {}
+        steps: []
+        analysis: {}
+      blueGreen:
+        activeService: ""
+        previewService: ""
+        autoPromotionEnabled: true
+        scaleDownDelaySeconds: 30
   stateful:
     podManagementPolicy: OrderedReady
     updateStrategy:

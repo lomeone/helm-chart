@@ -24,23 +24,6 @@ workload:
       containerPort: 8080
       protocol: TCP
 
-  strategy:
-    type: rollingUpdate
-    rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
-    canary:
-      stableService: ""
-      canaryService: ""
-      trafficRouting: {}
-      steps: []
-      analysis: {}
-    blueGreen:
-      activeService: ""
-      previewService: ""
-      autoPromotionEnabled: true
-      scaleDownDelaySeconds: 30
-
   autoscaling:
     enabled: false
     minReplicas: 2
@@ -79,6 +62,24 @@ workload:
   envFrom: []
   volumes: []
   volumeMounts: []
+
+  stateless:
+    strategy:
+      type: rollingUpdate
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      canary:
+        stableService: ""
+        canaryService: ""
+        trafficRouting: {}
+        steps: []
+        analysis: {}
+      blueGreen:
+        activeService: ""
+        previewService: ""
+        autoPromotionEnabled: true
+        scaleDownDelaySeconds: 30
 
   stateful:
     # @schema enum: ["OrderedReady", "Parallel"]

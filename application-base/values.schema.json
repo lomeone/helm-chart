@@ -23,13 +23,6 @@
             "pullPolicy": { "type": "string" }
           }
         },
-        "strategy": {
-          "type": "object",
-          "additionalProperties": true,
-          "properties": {
-            "type": { "type": "string", "enum": ["rollingUpdate", "canary", "blueGreen"] }
-          }
-        },
         "autoscaling": {
           "type": "object",
           "additionalProperties": true,
@@ -39,6 +32,19 @@
             "maxReplicas": { "type": "integer", "minimum": 1 },
             "targetCpuUtilization": { "type": ["integer", "null"], "minimum": 1 },
             "targetMemoryUtilization": { "type": ["integer", "null"], "minimum": 1 }
+          }
+        },
+        "stateless": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "strategy": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "type": { "type": "string", "enum": ["rollingUpdate", "canary", "blueGreen"] }
+              }
+            }
           }
         },
         "stateful": {

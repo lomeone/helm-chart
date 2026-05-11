@@ -19,40 +19,40 @@ spec:
     matchLabels:
       {{- include "application-base.selectorLabels" . | nindent 6 }}
   strategy:
-    {{- if eq .Values.workload.strategy.type "rollingUpdate" }}
+    {{- if eq .Values.workload.stateless.strategy.type "rollingUpdate" }}
     canary:
-      maxSurge: {{ .Values.workload.strategy.rollingUpdate.maxSurge | quote }}
-      maxUnavailable: {{ .Values.workload.strategy.rollingUpdate.maxUnavailable | quote }}
-    {{- else if eq .Values.workload.strategy.type "canary" }}
+      maxSurge: {{ .Values.workload.stateless.strategy.rollingUpdate.maxSurge | quote }}
+      maxUnavailable: {{ .Values.workload.stateless.strategy.rollingUpdate.maxUnavailable | quote }}
+    {{- else if eq .Values.workload.stateless.strategy.type "canary" }}
     canary:
-      {{- with .Values.workload.strategy.canary.stableService }}
+      {{- with .Values.workload.stateless.strategy.canary.stableService }}
       stableService: {{ . | quote }}
       {{- end }}
-      {{- with .Values.workload.strategy.canary.canaryService }}
+      {{- with .Values.workload.stateless.strategy.canary.canaryService }}
       canaryService: {{ . | quote }}
       {{- end }}
-      {{- with .Values.workload.strategy.canary.trafficRouting }}
+      {{- with .Values.workload.stateless.strategy.canary.trafficRouting }}
       trafficRouting:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.workload.strategy.canary.steps }}
+      {{- with .Values.workload.stateless.strategy.canary.steps }}
       steps:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.workload.strategy.canary.analysis }}
+      {{- with .Values.workload.stateless.strategy.canary.analysis }}
       analysis:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-    {{- else if eq .Values.workload.strategy.type "blueGreen" }}
+    {{- else if eq .Values.workload.stateless.strategy.type "blueGreen" }}
     blueGreen:
-      activeService: {{ default (include "application-base.fullname" .) .Values.workload.strategy.blueGreen.activeService | quote }}
-      {{- with .Values.workload.strategy.blueGreen.previewService }}
+      activeService: {{ default (include "application-base.fullname" .) .Values.workload.stateless.strategy.blueGreen.activeService | quote }}
+      {{- with .Values.workload.stateless.strategy.blueGreen.previewService }}
       previewService: {{ . | quote }}
       {{- end }}
-      autoPromotionEnabled: {{ .Values.workload.strategy.blueGreen.autoPromotionEnabled }}
-      scaleDownDelaySeconds: {{ .Values.workload.strategy.blueGreen.scaleDownDelaySeconds }}
+      autoPromotionEnabled: {{ .Values.workload.stateless.strategy.blueGreen.autoPromotionEnabled }}
+      scaleDownDelaySeconds: {{ .Values.workload.stateless.strategy.blueGreen.scaleDownDelaySeconds }}
     {{- else }}
-    {{- fail "workload.strategy.type must be one of rollingUpdate, canary, blueGreen" }}
+    {{- fail "workload.stateless.strategy.type must be one of rollingUpdate, canary, blueGreen" }}
     {{- end }}
   template:
     metadata:
