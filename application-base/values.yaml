@@ -65,6 +65,9 @@ workload:
       containerPort: 8080
       protocol: TCP
 
+  initContainers: []
+  extraContainers: []
+
   autoscaling:
     enabled: false
     minReplicas: 2

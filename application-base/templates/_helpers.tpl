@@ -131,6 +131,10 @@ priorityClassName: {{ . | quote }}
 {{- if .Values.workload.terminationGracePeriodSeconds }}
 terminationGracePeriodSeconds: {{ .Values.workload.terminationGracePeriodSeconds }}
 {{- end }}
+{{- with .Values.workload.initContainers }}
+initContainers:
+{{ toYaml . | indent 2 }}
+{{- end }}
 containers:
   - name: {{ include "application-base.name" . }}
     image: {{ include "application-base.image" . | quote }}
@@ -206,6 +210,9 @@ containers:
     volumeMounts:
 {{ toYaml . | indent 6 }}
 {{- end }}
+{{- with .Values.workload.extraContainers }}
+{{ toYaml . | indent 2 }}
+{{- end }}
 {{- $volumes := .Values.workload.volumes | default list -}}
 {{- if and .Values.config.configMap.enabled .Values.config.configMap.mount.enabled -}}
 {{- $volumes = append $volumes (dict "name" .Values.config.configMap.mount.name "configMap" (dict "name" (include "application-base.fullname" .))) -}}
@@ -231,4 +238,3 @@ topologySpreadConstraints:
 {{ toYaml . | indent 2 }}
 {{- end }}
 {{- end -}}
-

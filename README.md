@@ -128,6 +128,8 @@ chart는 다음을 지원해야 한다.
 - replicas
 - command/args
 - container ports
+- init containers
+- extra containers
 - resources
 - probes
 - lifecycle
@@ -614,6 +616,8 @@ workload:
     repository: ""
     tag: ""
     pullPolicy: IfNotPresent
+  initContainers: []
+  extraContainers: []
   autoscaling:
     enabled: false
     minReplicas: 2
