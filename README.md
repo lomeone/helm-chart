@@ -239,6 +239,7 @@ workload:
 
 지원 항목:
 
+- `revisionHistoryLimit`
 - `strategy.type`: `rollingUpdate`, `canary`, `blueGreen`
 - `strategy.rollingUpdate`
 - `strategy.canary`
@@ -250,6 +251,7 @@ workload:
 workload:
   type: stateless
   stateless:
+    revisionHistoryLimit: 3
     strategy:
       type: rollingUpdate
       rollingUpdate:
@@ -551,29 +553,8 @@ workload:
   enabled: true
   type: stateless
   replicas: 2
-  image:
-    repository: ""
-    tag: ""
-    pullPolicy: IfNotPresent
-  autoscaling:
-    enabled: false
-    minReplicas: 2
-    maxReplicas: 5
-    targetCpuUtilization: null
-    targetMemoryUtilization: null
-  pdb:
-    enabled: false
-  podLabels: {}
-  podAnnotations: {}
-  podSecurityContext: {}
-  securityContext: {}
-  resources: {}
-  nodeSelector: {}
-  tolerations: []
-  affinity: {}
-  volumes: []
-  volumeMounts: []
   stateless:
+    revisionHistoryLimit: 3
     strategy:
       type: rollingUpdate
       rollingUpdate:
@@ -596,6 +577,28 @@ workload:
       type: RollingUpdate
       rollingUpdate: {}
     volumeClaimTemplates: []
+  image:
+    repository: ""
+    tag: ""
+    pullPolicy: IfNotPresent
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCpuUtilization: null
+    targetMemoryUtilization: null
+  pdb:
+    enabled: false
+  podLabels: {}
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  volumes: []
+  volumeMounts: []
 
 network:
   service:

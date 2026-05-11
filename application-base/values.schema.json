@@ -38,6 +38,7 @@
           "type": "object",
           "additionalProperties": true,
           "properties": {
+            "revisionHistoryLimit": { "type": "integer", "minimum": 0 },
             "strategy": {
               "type": "object",
               "additionalProperties": true,

@@ -14,7 +14,7 @@ spec:
   {{- if not .Values.workload.autoscaling.enabled }}
   replicas: {{ .Values.workload.replicas }}
   {{- end }}
-  revisionHistoryLimit: {{ .Values.workload.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ .Values.workload.stateless.revisionHistoryLimit }}
   selector:
     matchLabels:
       {{- include "application-base.selectorLabels" . | nindent 6 }}
