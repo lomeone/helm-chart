@@ -703,7 +703,8 @@ config:
     ├── values.schema.json
     ├── templates
     │   ├── _helpers.tpl
-    │   ├── workload.yaml
+    │   ├── rollout.yaml
+    │   ├── statefulset.yaml
     │   ├── service.yaml
     │   ├── httproute.yaml
     │   ├── grpcroute.yaml
@@ -714,7 +715,7 @@ config:
     │   ├── hpa.yaml
     │   ├── pdb.yaml
     │   ├── analysis-templates.yaml
-    │   ├── inbound-authorization-policy.yaml
+    │   ├── authorizationpolicy.yaml
     │   └── tests
     │       └── test-connection.yaml
     └── examples
