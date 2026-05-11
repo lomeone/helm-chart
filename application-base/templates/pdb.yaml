@@ -1,0 +1,22 @@
+{{- if and .Values.workload.enabled .Values.workload.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "application-base.fullname" . }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.workload.pdb.minAvailable }}
+  minAvailable: {{ .Values.workload.pdb.minAvailable }}
+  {{- else }}
+  maxUnavailable: {{ .Values.workload.pdb.maxUnavailable }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "application-base.selectorLabels" . | nindent 6 }}
+{{- end }}
+

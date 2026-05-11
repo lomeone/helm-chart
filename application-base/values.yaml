@@ -1,0 +1,224 @@
+nameOverride: ""
+fullnameOverride: ""
+
+commonLabels: {}
+commonAnnotations: {}
+
+workload:
+  enabled: true
+  type: stateless
+  replicas: 2
+  revisionHistoryLimit: 3
+
+  image:
+    repository: nginx
+    tag: latest
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+
+  command: []
+  args: []
+
+  ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+
+  strategy:
+    type: rollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    canary:
+      stableService: ""
+      canaryService: ""
+      trafficRouting: {}
+      steps: []
+      analysis: {}
+    blueGreen:
+      activeService: ""
+      previewService: ""
+      autoPromotionEnabled: true
+      scaleDownDelaySeconds: 30
+
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCpuUtilization: null
+    targetMemoryUtilization: null
+    behavior: {}
+    metrics: []
+
+  pdb:
+    enabled: false
+    minAvailable: null
+    maxUnavailable: 1
+
+  podLabels: {}
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext: {}
+
+  resources: {}
+
+  readinessProbe: {}
+  livenessProbe: {}
+  startupProbe: {}
+  lifecycle: {}
+
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints: []
+
+  terminationGracePeriodSeconds: null
+  priorityClassName: ""
+
+  env: []
+  envFrom: []
+  volumes: []
+  volumeMounts: []
+  volumeClaimTemplates: []
+
+network:
+  service:
+    enabled: true
+    type: ClusterIP
+    annotations: {}
+    labels: {}
+    ports:
+      - name: http
+        port: 80
+        targetPort: http
+        protocol: TCP
+    sessionAffinity: None
+
+  headlessService:
+    enabled: false
+    annotations: {}
+    labels: {}
+    ports: []
+
+  httpRoute:
+    internal:
+      enabled: false
+      annotations: {}
+      labels: {}
+      parentRef:
+        name: ""
+        namespace: ""
+      hostnames: []
+      additionalHostnames: []
+      dnsAutoRegistration:
+        enabled: false
+        annotations: {}
+      rules: []
+    external:
+      enabled: false
+      annotations: {}
+      labels: {}
+      parentRef:
+        name: ""
+        namespace: ""
+      hostnames: []
+      additionalHostnames: []
+      dnsAutoRegistration:
+        enabled: false
+        annotations: {}
+      rules: []
+
+  grpcRoute:
+    internal:
+      enabled: false
+      annotations: {}
+      labels: {}
+      parentRef:
+        name: ""
+        namespace: ""
+      hostnames: []
+      additionalHostnames: []
+      dnsAutoRegistration:
+        enabled: false
+        annotations: {}
+      rules: []
+    external:
+      enabled: false
+      annotations: {}
+      labels: {}
+      parentRef:
+        name: ""
+        namespace: ""
+      hostnames: []
+      additionalHostnames: []
+      dnsAutoRegistration:
+        enabled: false
+        annotations: {}
+      rules: []
+
+  authorizationPolicy:
+    enabled: false
+    annotations: {}
+    labels: {}
+    action: ALLOW
+    selector: {}
+    rules: []
+
+accessControl:
+  serviceAccount:
+    create: true
+    name: ""
+    annotations: {}
+    labels: {}
+    automountServiceAccountToken: true
+
+  rbac:
+    create: false
+    rules: []
+    clusterRules: []
+    roleAnnotations: {}
+    roleLabels: {}
+    roleBindingAnnotations: {}
+    roleBindingLabels: {}
+    clusterRoleAnnotations: {}
+    clusterRoleLabels: {}
+    clusterRoleBindingAnnotations: {}
+    clusterRoleBindingLabels: {}
+
+config:
+  env: []
+  envFrom: []
+
+  configMap:
+    enabled: false
+    annotations: {}
+    labels: {}
+    data: {}
+    binaryData: {}
+    mount:
+      enabled: false
+      name: config
+      mountPath: /config
+      readOnly: true
+
+  externalSecrets:
+    enabled: false
+    apiVersion: external-secrets.io/v1
+    refreshInterval: 1h
+    secretStoreRef:
+      name: ""
+      kind: ClusterSecretStore
+    target:
+      name: ""
+      creationPolicy: Owner
+      deletionPolicy: Retain
+      template: {}
+    data: []
+    dataFrom: []
+    annotations: {}
+    labels: {}
+    envFrom:
+      enabled: false
+
+  additionalConfig: []
+

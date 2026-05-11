@@ -1,0 +1,113 @@
+{{- if .Values.workload.enabled }}
+{{- if eq .Values.workload.type "stateless" }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "application-base.fullname" . }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if not .Values.workload.autoscaling.enabled }}
+  replicas: {{ .Values.workload.replicas }}
+  {{- end }}
+  revisionHistoryLimit: {{ .Values.workload.revisionHistoryLimit }}
+  selector:
+    matchLabels:
+      {{- include "application-base.selectorLabels" . | nindent 6 }}
+  strategy:
+    {{- if eq .Values.workload.strategy.type "rollingUpdate" }}
+    canary:
+      maxSurge: {{ .Values.workload.strategy.rollingUpdate.maxSurge | quote }}
+      maxUnavailable: {{ .Values.workload.strategy.rollingUpdate.maxUnavailable | quote }}
+    {{- else if eq .Values.workload.strategy.type "canary" }}
+    canary:
+      {{- with .Values.workload.strategy.canary.stableService }}
+      stableService: {{ . | quote }}
+      {{- end }}
+      {{- with .Values.workload.strategy.canary.canaryService }}
+      canaryService: {{ . | quote }}
+      {{- end }}
+      {{- with .Values.workload.strategy.canary.trafficRouting }}
+      trafficRouting:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.workload.strategy.canary.steps }}
+      steps:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.workload.strategy.canary.analysis }}
+      analysis:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- else if eq .Values.workload.strategy.type "blueGreen" }}
+    blueGreen:
+      activeService: {{ default (include "application-base.fullname" .) .Values.workload.strategy.blueGreen.activeService | quote }}
+      {{- with .Values.workload.strategy.blueGreen.previewService }}
+      previewService: {{ . | quote }}
+      {{- end }}
+      autoPromotionEnabled: {{ .Values.workload.strategy.blueGreen.autoPromotionEnabled }}
+      scaleDownDelaySeconds: {{ .Values.workload.strategy.blueGreen.scaleDownDelaySeconds }}
+    {{- else }}
+    {{- fail "workload.strategy.type must be one of rollingUpdate, canary, blueGreen" }}
+    {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "application-base.selectorLabels" . | nindent 8 }}
+        {{- with .Values.workload.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- $annotations := merge (.Values.workload.podAnnotations | default dict) (.Values.commonAnnotations | default dict) }}
+      {{- with $annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "application-base.podSpec" . | nindent 6 }}
+{{- else if eq .Values.workload.type "stateful" }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "application-base.fullname" . }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if not .Values.workload.autoscaling.enabled }}
+  replicas: {{ .Values.workload.replicas }}
+  {{- end }}
+  serviceName: {{ ternary (printf "%s-headless" (include "application-base.fullname" .)) (include "application-base.fullname" .) .Values.network.headlessService.enabled }}
+  selector:
+    matchLabels:
+      {{- include "application-base.selectorLabels" . | nindent 6 }}
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        {{- include "application-base.selectorLabels" . | nindent 8 }}
+        {{- with .Values.workload.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- $annotations := merge (.Values.workload.podAnnotations | default dict) (.Values.commonAnnotations | default dict) }}
+      {{- with $annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- include "application-base.podSpec" . | nindent 6 }}
+  {{- with .Values.workload.volumeClaimTemplates }}
+  volumeClaimTemplates:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- else }}
+{{- fail "workload.type must be one of stateless, stateful" }}
+{{- end }}
+{{- end }}

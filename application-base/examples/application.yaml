@@ -1,0 +1,77 @@
+workload:
+  image:
+    repository: ghcr.io/example/application
+    tag: "1.0.0"
+  ports:
+    - name: http
+      containerPort: 8080
+      protocol: TCP
+  readinessProbe:
+    httpGet:
+      path: /actuator/health/readiness
+      port: http
+  livenessProbe:
+    httpGet:
+      path: /actuator/health/liveness
+      port: http
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      memory: 512Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 5
+    targetCpuUtilization: 70
+    targetMemoryUtilization: 80
+  podAnnotations:
+    instrumentation.opentelemetry.io/inject-java: "true"
+
+network:
+  service:
+    ports:
+      - name: http
+        port: 80
+        targetPort: http
+        protocol: TCP
+  httpRoute:
+    internal:
+      enabled: true
+      parentRef:
+        name: internal-gateway
+        namespace: istio-gateway
+      hostnames:
+        - app.internal.example.com
+  authorizationPolicy:
+    enabled: true
+    action: ALLOW
+    rules:
+      - from:
+          - source:
+              requestPrincipals:
+                - "*"
+        to:
+          - operation:
+              methods:
+                - GET
+                - POST
+
+config:
+  configMap:
+    enabled: true
+    data:
+      SPRING_PROFILES_ACTIVE: production
+  externalSecrets:
+    enabled: true
+    secretStoreRef:
+      name: platform-secrets
+      kind: ClusterSecretStore
+    envFrom:
+      enabled: true
+    data:
+      - secretKey: DATABASE_URL
+        remoteRef:
+          key: application/database-url
+

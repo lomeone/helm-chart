@@ -1,0 +1,30 @@
+{{- if .Values.network.authorizationPolicy.enabled }}
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ include "application-base.fullname" . }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+    {{- with .Values.network.authorizationPolicy.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- $annotations := merge (.Values.network.authorizationPolicy.annotations | default dict) (.Values.commonAnnotations | default dict) }}
+  {{- with $annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  action: {{ .Values.network.authorizationPolicy.action }}
+  selector:
+    matchLabels:
+      {{- if .Values.network.authorizationPolicy.selector }}
+      {{- toYaml .Values.network.authorizationPolicy.selector | nindent 6 }}
+      {{- else }}
+      {{- include "application-base.selectorLabels" . | nindent 6 }}
+      {{- end }}
+  {{- with .Values.network.authorizationPolicy.rules }}
+  rules:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+

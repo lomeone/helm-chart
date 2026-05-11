@@ -1,0 +1,13 @@
+apiVersion: v2
+name: application-base
+description: A generic base Helm chart for Kubernetes applications.
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - application
+  - base
+  - rollout
+  - gateway-api
+maintainers: []
+

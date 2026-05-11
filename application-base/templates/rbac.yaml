@@ -1,0 +1,82 @@
+{{- if .Values.accessControl.rbac.create }}
+{{- if .Values.accessControl.rbac.rules }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "application-base.fullname" . }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+    {{- with .Values.accessControl.rbac.roleLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.accessControl.rbac.roleAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+  {{- toYaml .Values.accessControl.rbac.rules | nindent 2 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "application-base.fullname" . }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+    {{- with .Values.accessControl.rbac.roleBindingLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.accessControl.rbac.roleBindingAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "application-base.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "application-base.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}
+{{- if .Values.accessControl.rbac.clusterRules }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "application-base.fullname" . }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+    {{- with .Values.accessControl.rbac.clusterRoleLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.accessControl.rbac.clusterRoleAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+  {{- toYaml .Values.accessControl.rbac.clusterRules | nindent 2 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "application-base.fullname" . }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+    {{- with .Values.accessControl.rbac.clusterRoleBindingLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.accessControl.rbac.clusterRoleBindingAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "application-base.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "application-base.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}
+{{- end }}
+

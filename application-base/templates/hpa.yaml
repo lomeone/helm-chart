@@ -1,0 +1,46 @@
+{{- if and .Values.workload.enabled .Values.workload.autoscaling.enabled }}
+{{- if and (not .Values.workload.autoscaling.targetCpuUtilization) (not .Values.workload.autoscaling.targetMemoryUtilization) (not .Values.workload.autoscaling.metrics) }}
+{{- fail "workload.autoscaling requires at least one of targetCpuUtilization, targetMemoryUtilization, or metrics" }}
+{{- end }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "application-base.fullname" . }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: {{ ternary "argoproj.io/v1alpha1" "apps/v1" (eq .Values.workload.type "stateless") }}
+    kind: {{ ternary "Rollout" "StatefulSet" (eq .Values.workload.type "stateless") }}
+    name: {{ include "application-base.fullname" . }}
+  minReplicas: {{ .Values.workload.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.workload.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.workload.autoscaling.targetCpuUtilization }}
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.workload.autoscaling.targetCpuUtilization }}
+    {{- end }}
+    {{- if .Values.workload.autoscaling.targetMemoryUtilization }}
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: {{ .Values.workload.autoscaling.targetMemoryUtilization }}
+    {{- end }}
+    {{- with .Values.workload.autoscaling.metrics }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.workload.autoscaling.behavior }}
+  behavior:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}

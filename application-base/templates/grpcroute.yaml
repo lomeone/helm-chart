@@ -1,0 +1,40 @@
+{{- $root := . -}}
+{{- range $scope, $route := .Values.network.grpcRoute }}
+{{- if $route.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: GRPCRoute
+metadata:
+  name: {{ include "application-base.fullname" $root }}-grpc-{{ $scope }}
+  labels:
+    {{- include "application-base.labels" $root | nindent 4 }}
+    app.kubernetes.io/route-scope: {{ $scope }}
+    {{- with $route.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- $annotations := merge ($route.annotations | default dict) ($root.Values.commonAnnotations | default dict) }}
+  {{- if $route.dnsAutoRegistration.enabled }}
+  {{- $annotations = merge ($route.dnsAutoRegistration.annotations | default dict) $annotations }}
+  {{- end }}
+  {{- with $annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  parentRefs:
+    {{- include "application-base.parentRef" (dict "route" $route) | nindent 4 }}
+  {{- $hostnames := concat ($route.hostnames | default list) ($route.additionalHostnames | default list) }}
+  {{- with $hostnames }}
+  hostnames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- if $route.rules }}
+    {{- toYaml $route.rules | nindent 4 }}
+    {{- else }}
+    - backendRefs:
+        {{- include "application-base.defaultBackendRefs" $root | nindent 8 }}
+    {{- end }}
+---
+{{- end }}
+{{- end }}
+

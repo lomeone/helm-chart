@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "nameOverride": { "type": "string" },
+    "fullnameOverride": { "type": "string" },
+    "commonLabels": { "type": "object" },
+    "commonAnnotations": { "type": "object" },
+    "workload": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "type": { "type": "string", "enum": ["stateless", "stateful"] },
+        "replicas": { "type": "integer", "minimum": 0 },
+        "image": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "repository": { "type": "string" },
+            "tag": { "type": "string" },
+            "pullPolicy": { "type": "string" }
+          }
+        },
+        "strategy": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "type": { "type": "string", "enum": ["rollingUpdate", "canary", "blueGreen"] }
+          }
+        },
+        "autoscaling": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "minReplicas": { "type": "integer", "minimum": 1 },
+            "maxReplicas": { "type": "integer", "minimum": 1 },
+            "targetCpuUtilization": { "type": ["integer", "null"], "minimum": 1 },
+            "targetMemoryUtilization": { "type": ["integer", "null"], "minimum": 1 }
+          }
+        }
+      }
+    },
+    "network": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "service": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "type": { "type": "string" }
+          }
+        },
+        "authorizationPolicy": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "action": { "type": "string", "enum": ["ALLOW", "DENY", "AUDIT", "CUSTOM"] }
+          }
+        }
+      }
+    },
+    "accessControl": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "serviceAccount": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "create": { "type": "boolean" },
+            "name": { "type": "string" }
+          }
+        },
+        "rbac": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "create": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "config": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "configMap": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        },
+        "externalSecrets": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "apiVersion": { "type": "string" }
+          }
+        }
+      }
+    }
+  }
+}
+
