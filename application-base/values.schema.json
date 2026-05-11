@@ -40,6 +40,22 @@
             "targetCpuUtilization": { "type": ["integer", "null"], "minimum": 1 },
             "targetMemoryUtilization": { "type": ["integer", "null"], "minimum": 1 }
           }
+        },
+        "stateful": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "podManagementPolicy": { "type": "string", "enum": ["OrderedReady", "Parallel"] },
+            "updateStrategy": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "type": { "type": "string", "enum": ["RollingUpdate", "OnDelete"] },
+                "rollingUpdate": { "type": "object" }
+              }
+            },
+            "volumeClaimTemplates": { "type": "array" }
+          }
         }
       }
     },
@@ -109,4 +125,3 @@
     }
   }
 }
-

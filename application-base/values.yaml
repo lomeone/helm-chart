@@ -79,7 +79,15 @@ workload:
   envFrom: []
   volumes: []
   volumeMounts: []
-  volumeClaimTemplates: []
+
+  stateful:
+    # @schema enum: ["OrderedReady", "Parallel"]
+    podManagementPolicy: OrderedReady
+    updateStrategy:
+      # @schema enum: ["RollingUpdate", "OnDelete"]
+      type: RollingUpdate
+      rollingUpdate: {}
+    volumeClaimTemplates: []
 
 network:
   service:
@@ -221,4 +229,3 @@ config:
       enabled: false
 
   additionalConfig: []
-

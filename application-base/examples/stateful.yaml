@@ -3,15 +3,19 @@ workload:
   image:
     repository: ghcr.io/example/stateful-application
     tag: "1.0.0"
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 10Gi
+  stateful:
+    podManagementPolicy: Parallel
+    updateStrategy:
+      type: RollingUpdate
+    volumeClaimTemplates:
+      - metadata:
+          name: data
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 10Gi
   volumeMounts:
     - name: data
       mountPath: /data
@@ -19,4 +23,3 @@ workload:
 network:
   headlessService:
     enabled: true
-

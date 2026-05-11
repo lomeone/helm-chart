@@ -57,8 +57,6 @@ Application charts enable injection through pod annotations and environment vari
 
 - Kubernetes minimum version
 - Helm minimum version
-- StatefulSet `volumeClaimTemplates` support level
 - custom autoscaling metric standardization
 - whether to render Prometheus Operator `ServiceMonitor` or `PodMonitor`
 - gateway/platform claim-to-header mapping convention
-

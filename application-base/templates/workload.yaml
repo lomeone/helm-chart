@@ -84,11 +84,16 @@ spec:
   replicas: {{ .Values.workload.replicas }}
   {{- end }}
   serviceName: {{ ternary (printf "%s-headless" (include "application-base.fullname" .)) (include "application-base.fullname" .) .Values.network.headlessService.enabled }}
+  podManagementPolicy: {{ .Values.workload.stateful.podManagementPolicy }}
   selector:
     matchLabels:
       {{- include "application-base.selectorLabels" . | nindent 6 }}
   updateStrategy:
-    type: RollingUpdate
+    type: {{ .Values.workload.stateful.updateStrategy.type }}
+    {{- if and (eq .Values.workload.stateful.updateStrategy.type "RollingUpdate") .Values.workload.stateful.updateStrategy.rollingUpdate }}
+    rollingUpdate:
+      {{- toYaml .Values.workload.stateful.updateStrategy.rollingUpdate | nindent 6 }}
+    {{- end }}
   template:
     metadata:
       labels:
@@ -103,7 +108,7 @@ spec:
       {{- end }}
     spec:
       {{- include "application-base.podSpec" . | nindent 6 }}
-  {{- with .Values.workload.volumeClaimTemplates }}
+  {{- with .Values.workload.stateful.volumeClaimTemplates }}
   volumeClaimTemplates:
     {{- toYaml . | nindent 4 }}
   {{- end }}
