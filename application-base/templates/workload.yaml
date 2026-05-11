@@ -61,6 +61,28 @@ spec:
       {{- end }}
       autoPromotionEnabled: {{ .Values.workload.stateless.strategy.blueGreen.autoPromotionEnabled }}
       scaleDownDelaySeconds: {{ .Values.workload.stateless.strategy.blueGreen.scaleDownDelaySeconds }}
+      {{- if .Values.workload.stateless.strategy.blueGreen.prePromotionAnalysis.enabled }}
+      prePromotionAnalysis:
+        {{- with .Values.workload.stateless.strategy.blueGreen.prePromotionAnalysis.templates }}
+        templates:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.workload.stateless.strategy.blueGreen.prePromotionAnalysis.args }}
+        args:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.workload.stateless.strategy.blueGreen.postPromotionAnalysis.enabled }}
+      postPromotionAnalysis:
+        {{- with .Values.workload.stateless.strategy.blueGreen.postPromotionAnalysis.templates }}
+        templates:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.workload.stateless.strategy.blueGreen.postPromotionAnalysis.args }}
+        args:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- end }}
     {{- else }}
     {{- fail "workload.stateless.strategy.type must be one of rollingUpdate, canary, blueGreen" }}
     {{- end }}

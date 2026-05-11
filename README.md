@@ -242,10 +242,12 @@ workload:
 - `revisionHistoryLimit`
 - `strategy.type`: `rollingUpdate`, `canary`, `blueGreen`
 - `strategy.rollingUpdate`
+- `analysis.templates`
 - `strategy.canary`
 - `strategy.blueGreen`
 - `strategy.canary.analysis`
-- `strategy.canary.analysisTemplates`
+- `strategy.blueGreen.prePromotionAnalysis`
+- `strategy.blueGreen.postPromotionAnalysis`
 
 예상 구조:
 
@@ -254,6 +256,8 @@ workload:
   type: stateless
   stateless:
     revisionHistoryLimit: 3
+    analysis:
+      templates: []
     strategy:
       type: rollingUpdate
       rollingUpdate:
@@ -269,12 +273,19 @@ workload:
           templates: []
           args: []
           startingStep: null
-        analysisTemplates: []
       blueGreen:
         activeService: ""
         previewService: ""
         autoPromotionEnabled: true
         scaleDownDelaySeconds: 30
+        prePromotionAnalysis:
+          enabled: false
+          templates: []
+          args: []
+        postPromotionAnalysis:
+          enabled: false
+          templates: []
+          args: []
 ```
 
 ### 10.6 Stateful Options
@@ -563,6 +574,8 @@ workload:
   replicas: 2
   stateless:
     revisionHistoryLimit: 3
+    analysis:
+      templates: []
     strategy:
       type: rollingUpdate
       rollingUpdate:
@@ -578,12 +591,19 @@ workload:
           templates: []
           args: []
           startingStep: null
-        analysisTemplates: []
       blueGreen:
         activeService: ""
         previewService: ""
         autoPromotionEnabled: true
         scaleDownDelaySeconds: 30
+        prePromotionAnalysis:
+          enabled: false
+          templates: []
+          args: []
+        postPromotionAnalysis:
+          enabled: false
+          templates: []
+          args: []
   stateful:
     podManagementPolicy: OrderedReady
     updateStrategy:
@@ -695,6 +715,7 @@ config:
     │       └── test-connection.yaml
     └── examples
         ├── application.yaml
+        ├── bluegreen-analysis.yaml
         ├── canary-analysis.yaml
         └── stateful.yaml
 ```

@@ -3,6 +3,24 @@ workload:
     repository: ghcr.io/example/application
     tag: "1.0.0"
   stateless:
+    analysis:
+      templates:
+        - name: canary-analysis-application-base-success-rate
+          args:
+            - name: service-name
+          metrics:
+            - name: success-rate
+              interval: 1m
+              count: 5
+              failureLimit: 1
+              successCondition: result[0] >= 0.99
+              provider:
+                prometheus:
+                  address: http://prometheus-operated.monitoring.svc:9090
+                  query: |
+                    sum(rate(http_server_requests_seconds_count{service="{{args.service-name}}",status!~"5.."}[5m]))
+                    /
+                    sum(rate(http_server_requests_seconds_count{service="{{args.service-name}}"}[5m]))
     strategy:
       type: canary
       canary:
@@ -23,23 +41,6 @@ workload:
             - name: service-name
               value: canary-analysis-application-base
           startingStep: 1
-        analysisTemplates:
-          - name: canary-analysis-application-base-success-rate
-            args:
-              - name: service-name
-            metrics:
-              - name: success-rate
-                interval: 1m
-                count: 5
-                failureLimit: 1
-                successCondition: result[0] >= 0.99
-                provider:
-                  prometheus:
-                    address: http://prometheus-operated.monitoring.svc:9090
-                    query: |
-                      sum(rate(http_server_requests_seconds_count{service="{{args.service-name}}",status!~"5.."}[5m]))
-                      /
-                      sum(rate(http_server_requests_seconds_count{service="{{args.service-name}}"}[5m]))
 
 network:
   service:
@@ -48,4 +49,3 @@ network:
         port: 80
         targetPort: http
         protocol: TCP
-

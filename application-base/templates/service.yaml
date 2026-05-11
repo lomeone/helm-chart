@@ -98,3 +98,28 @@ spec:
   ports:
     {{- toYaml .Values.network.service.ports | nindent 4 }}
 {{- end }}
+{{- if and (eq .Values.workload.type "stateless") (eq .Values.workload.stateless.strategy.type "blueGreen") .Values.workload.stateless.strategy.blueGreen.previewService (ne .Values.workload.stateless.strategy.blueGreen.previewService (include "application-base.fullname" .)) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.workload.stateless.strategy.blueGreen.previewService }}
+  labels:
+    {{- include "application-base.labels" . | nindent 4 }}
+    app.kubernetes.io/service-role: preview
+    {{- with .Values.network.service.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- $annotations := merge (.Values.network.service.annotations | default dict) (.Values.commonAnnotations | default dict) }}
+  {{- with $annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.network.service.type }}
+  sessionAffinity: {{ .Values.network.service.sessionAffinity }}
+  selector:
+    {{- include "application-base.selectorLabels" . | nindent 4 }}
+  ports:
+    {{- toYaml .Values.network.service.ports | nindent 4 }}
+{{- end }}

@@ -39,6 +39,13 @@
           "additionalProperties": true,
           "properties": {
             "revisionHistoryLimit": { "type": "integer", "minimum": 0 },
+            "analysis": {
+              "type": "object",
+              "additionalProperties": true,
+              "properties": {
+                "templates": { "type": "array" }
+              }
+            },
             "strategy": {
               "type": "object",
               "additionalProperties": true,
@@ -57,8 +64,31 @@
                         "args": { "type": "array" },
                         "startingStep": { "type": ["integer", "null"], "minimum": 0 }
                       }
+                    }
+                  }
+                },
+                "blueGreen": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "properties": {
+                    "prePromotionAnalysis": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "properties": {
+                        "enabled": { "type": "boolean" },
+                        "templates": { "type": "array" },
+                        "args": { "type": "array" }
+                      }
                     },
-                    "analysisTemplates": { "type": "array" }
+                    "postPromotionAnalysis": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "properties": {
+                        "enabled": { "type": "boolean" },
+                        "templates": { "type": "array" },
+                        "args": { "type": "array" }
+                      }
+                    }
                   }
                 }
               }

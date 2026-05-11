@@ -11,6 +11,8 @@ workload:
 
   stateless:
     revisionHistoryLimit: 3
+    analysis:
+      templates: []
     strategy:
       type: rollingUpdate
       rollingUpdate:
@@ -26,12 +28,19 @@ workload:
           templates: []
           args: []
           startingStep: null
-        analysisTemplates: []
       blueGreen:
         activeService: ""
         previewService: ""
         autoPromotionEnabled: true
         scaleDownDelaySeconds: 30
+        prePromotionAnalysis:
+          enabled: false
+          templates: []
+          args: []
+        postPromotionAnalysis:
+          enabled: false
+          templates: []
+          args: []
 
   stateful:
     # @schema enum: ["OrderedReady", "Parallel"]

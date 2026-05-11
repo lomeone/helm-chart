@@ -1,6 +1,6 @@
-{{- if and .Values.workload.enabled (eq .Values.workload.type "stateless") .Values.workload.stateless.strategy.canary.analysisTemplates }}
+{{- if and .Values.workload.enabled (eq .Values.workload.type "stateless") .Values.workload.stateless.analysis.templates }}
 {{- $root := . -}}
-{{- range .Values.workload.stateless.strategy.canary.analysisTemplates }}
+{{- range .Values.workload.stateless.analysis.templates }}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
@@ -22,6 +22,6 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   metrics:
-    {{- toYaml (required "workload.stateless.strategy.canary.analysisTemplates[].metrics is required" .metrics) | nindent 4 }}
+    {{- toYaml (required "workload.stateless.analysis.templates[].metrics is required" .metrics) | nindent 4 }}
 {{- end }}
 {{- end }}
