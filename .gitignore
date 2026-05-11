@@ -1,0 +1,13 @@
+# IDE/editor directories
+.idea/
+.vscode/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Local temporary files
+*.swp
+*.swo
+*~
+
