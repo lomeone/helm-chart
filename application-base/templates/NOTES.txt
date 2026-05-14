@@ -1,0 +1,104 @@
+{{- /* ============================================================
+     Validation — all fail/required checks are centralised here.
+     ============================================================ */}}
+
+{{- if .Values.workload.enabled }}
+{{- if not .Values.workload.image.repository }}
+{{- fail "workload.image.repository is required" }}
+{{- end }}
+{{- if not .Values.workload.image.tag }}
+{{- fail "workload.image.tag is required" }}
+{{- end }}
+{{- end }}
+
+{{- if and .Values.workload.enabled (eq .Values.workload.type "stateless") }}
+{{- $st := .Values.workload.stateless.strategy.type }}
+{{- if not (has $st (list "rollingUpdate" "canary" "blueGreen")) }}
+{{- fail (printf "workload.stateless.strategy.type must be one of: rollingUpdate, canary, blueGreen (got: %s)" $st) }}
+{{- end }}
+{{- if eq $st "canary" }}
+{{- $canary := .Values.workload.stateless.strategy.canary }}
+{{- if and $canary.trafficRouting (not $canary.stableService) }}
+{{- fail "workload.stateless.strategy.canary.stableService is required when trafficRouting is configured" }}
+{{- end }}
+{{- if and $canary.trafficRouting (not $canary.canaryService) }}
+{{- fail "workload.stateless.strategy.canary.canaryService is required when trafficRouting is configured" }}
+{{- end }}
+{{- end }}
+{{- range .Values.workload.stateless.analysis.templates }}
+{{- if not .metrics }}
+{{- fail (printf "workload.stateless.analysis.templates[%s].metrics is required" (default "?" .name)) }}
+{{- end }}
+{{- end }}
+{{- end }}
+
+{{- if and .Values.workload.enabled .Values.workload.autoscaling.enabled }}
+{{- if and (not .Values.workload.autoscaling.targetCpuUtilization) (not .Values.workload.autoscaling.targetMemoryUtilization) (not .Values.workload.autoscaling.metrics) }}
+{{- fail "workload.autoscaling requires at least one of targetCpuUtilization, targetMemoryUtilization, or metrics" }}
+{{- end }}
+{{- if gt (int .Values.workload.autoscaling.minReplicas) (int .Values.workload.autoscaling.maxReplicas) }}
+{{- fail (printf "workload.autoscaling.minReplicas (%d) must be <= maxReplicas (%d)" (int .Values.workload.autoscaling.minReplicas) (int .Values.workload.autoscaling.maxReplicas)) }}
+{{- end }}
+{{- end }}
+
+{{- range $scope, $route := .Values.network.httpRoute }}
+{{- if and $route.enabled (not $route.parentRef.name) }}
+{{- fail (printf "network.httpRoute.%s.parentRef.name is required when the route is enabled" $scope) }}
+{{- end }}
+{{- end }}
+
+{{- range $scope, $route := .Values.network.grpcRoute }}
+{{- if and $route.enabled (not $route.parentRef.name) }}
+{{- fail (printf "network.grpcRoute.%s.parentRef.name is required when the route is enabled" $scope) }}
+{{- end }}
+{{- end }}
+
+{{- if .Values.config.externalSecrets.enabled }}
+{{- if not .Values.config.externalSecrets.secretStoreRef.name }}
+{{- fail "config.externalSecrets.secretStoreRef.name is required when externalSecrets is enabled" }}
+{{- end }}
+{{- if not (or .Values.config.externalSecrets.data .Values.config.externalSecrets.dataFrom) }}
+{{- fail "config.externalSecrets requires at least one of data or dataFrom" }}
+{{- end }}
+{{- end }}
+
+{{- /* ============================================================
+     Release summary
+     ============================================================ */}}
+Release: {{ .Release.Name }} ({{ .Release.Namespace }})
+Chart:   {{ .Chart.Name }}-{{ .Chart.Version }}
+
+Workload
+  type:     {{ .Values.workload.type }}
+  image:    {{ .Values.workload.image.repository }}:{{ .Values.workload.image.tag }}
+{{- if eq .Values.workload.type "stateless" }}
+  strategy: {{ .Values.workload.stateless.strategy.type }}
+{{- end }}
+{{- if .Values.workload.autoscaling.enabled }}
+  scaling:  HPA ({{ .Values.workload.autoscaling.minReplicas }}-{{ .Values.workload.autoscaling.maxReplicas }} replicas)
+{{- else }}
+  replicas: {{ .Values.workload.replicas }}
+{{- end }}
+
+Network
+{{- if .Values.network.service.enabled }}
+  service: {{ include "application-base.fullname" . }}
+{{- end }}
+{{- range $scope, $route := .Values.network.httpRoute }}
+{{- if $route.enabled }}
+  httpRoute ({{ $scope }}): {{ $route.parentRef.name }}
+{{- end }}
+{{- end }}
+{{- range $scope, $route := .Values.network.grpcRoute }}
+{{- if $route.enabled }}
+  grpcRoute ({{ $scope }}): {{ $route.parentRef.name }}
+{{- end }}
+{{- end }}
+
+Config
+{{- if .Values.config.configMap.enabled }}
+  configMap: {{ include "application-base.fullname" . }}
+{{- end }}
+{{- if .Values.config.externalSecrets.enabled }}
+  externalSecrets: {{ default (include "application-base.fullname" .) .Values.config.externalSecrets.target.name }}
+{{- end }}

@@ -43,7 +43,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ include "application-base.fullname" . }}
+  name: {{ printf "%s-%s" .Release.Namespace (include "application-base.fullname" .) }}
   labels:
     {{- include "application-base.labels" . | nindent 4 }}
     {{- with .Values.accessControl.rbac.clusterRoleLabels }}
@@ -59,7 +59,7 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "application-base.fullname" . }}
+  name: {{ printf "%s-%s" .Release.Namespace (include "application-base.fullname" .) }}
   labels:
     {{- include "application-base.labels" . | nindent 4 }}
     {{- with .Values.accessControl.rbac.clusterRoleBindingLabels }}
@@ -72,7 +72,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "application-base.fullname" . }}
+  name: {{ printf "%s-%s" .Release.Namespace (include "application-base.fullname" .) }}
 subjects:
   - kind: ServiceAccount
     name: {{ include "application-base.serviceAccountName" . }}

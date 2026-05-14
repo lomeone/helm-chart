@@ -34,6 +34,9 @@ Common labels.
 {{- define "application-base.labels" -}}
 helm.sh/chart: {{ include "application-base.chart" . }}
 {{ include "application-base.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- with .Values.commonLabels }}
 {{ toYaml . }}
@@ -72,23 +75,7 @@ Service account name.
 Container image reference.
 */}}
 {{- define "application-base.image" -}}
-{{- $repo := required "workload.image.repository is required" .Values.workload.image.repository -}}
-{{- $tag := required "workload.image.tag is required" .Values.workload.image.tag -}}
-{{- printf "%s:%s" $repo $tag -}}
-{{- end -}}
-
-{{/*
-Build route hostnames by joining hostnames and additionalHostnames.
-*/}}
-{{- define "application-base.routeHostnames" -}}
-{{- $hostnames := list -}}
-{{- range .hostnames -}}
-{{- $hostnames = append $hostnames . -}}
-{{- end -}}
-{{- range .additionalHostnames -}}
-{{- $hostnames = append $hostnames . -}}
-{{- end -}}
-{{- toYaml $hostnames -}}
+{{- printf "%s:%s" .Values.workload.image.repository .Values.workload.image.tag -}}
 {{- end -}}
 
 {{/*
@@ -100,12 +87,66 @@ Default route backendRefs.
 {{- end -}}
 
 {{/*
+Build container env field block.
+*/}}
+{{- define "application-base.containerEnvBlock" -}}
+{{- $env := concat (.Values.workload.env | default list) (.Values.config.env | default list) -}}
+{{- with $env -}}
+env:
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Build container envFrom field block.
+*/}}
+{{- define "application-base.containerEnvFromBlock" -}}
+{{- $envFrom := concat (.Values.workload.envFrom | default list) (.Values.config.envFrom | default list) -}}
+{{- if and .Values.config.configMap.enabled (not .Values.config.configMap.mount.enabled) -}}
+{{- $envFrom = append $envFrom (dict "configMapRef" (dict "name" (include "application-base.fullname" .))) -}}
+{{- end -}}
+{{- if and .Values.config.externalSecrets.enabled .Values.config.externalSecrets.envFrom.enabled -}}
+{{- $secretName := default (include "application-base.fullname" .) .Values.config.externalSecrets.target.name -}}
+{{- $envFrom = append $envFrom (dict "secretRef" (dict "name" $secretName)) -}}
+{{- end -}}
+{{- with $envFrom -}}
+envFrom:
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Build container volumeMounts field block.
+*/}}
+{{- define "application-base.containerVolumeMountsBlock" -}}
+{{- $volumeMounts := .Values.workload.volumeMounts | default list -}}
+{{- if and .Values.config.configMap.enabled .Values.config.configMap.mount.enabled -}}
+{{- $volumeMounts = append $volumeMounts (dict "name" .Values.config.configMap.mount.name "mountPath" .Values.config.configMap.mount.mountPath "readOnly" .Values.config.configMap.mount.readOnly) -}}
+{{- end -}}
+{{- with $volumeMounts -}}
+volumeMounts:
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Build pod volumes field block.
+*/}}
+{{- define "application-base.podVolumesBlock" -}}
+{{- $volumes := .Values.workload.volumes | default list -}}
+{{- if and .Values.config.configMap.enabled .Values.config.configMap.mount.enabled -}}
+{{- $volumes = append $volumes (dict "name" .Values.config.configMap.mount.name "configMap" (dict "name" (include "application-base.fullname" .))) -}}
+{{- end -}}
+{{- with $volumes -}}
+volumes:
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+{{- end -}}
+{{- end -}}
+
+{{/*
 Render a parentRef from route values.
 */}}
 {{- define "application-base.parentRef" -}}
-{{- if not .route.parentRef.name -}}
-{{- fail "route parentRef.name is required when a route is enabled" -}}
-{{- end -}}
 - name: {{ .route.parentRef.name | quote }}
 {{- with .route.parentRef.namespace }}
   namespace: {{ . | quote }}

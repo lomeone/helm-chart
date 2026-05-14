@@ -196,7 +196,7 @@ accessControl:
     name: ""
     annotations: {}
     labels: {}
-    automountServiceAccountToken: true
+    automountServiceAccountToken: false
 
   rbac:
     create: false
@@ -246,4 +246,4 @@ config:
     envFrom:
       enabled: false
 
-  additionalConfig: []
+extraManifests: []
