@@ -1,0 +1,111 @@
+suite: validation
+templates:
+  - templates/NOTES.txt
+
+tests:
+  - it: fails when image repository is empty
+    set:
+      workload.image.repository: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: workload.image.repository is required
+
+  - it: fails when image tag is empty
+    set:
+      workload.image.tag: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: workload.image.tag is required
+
+  - it: fails when canary trafficRouting set without stableService
+    set:
+      workload.stateless.strategy.type: canary
+      workload.stateless.strategy.canary.trafficRouting:
+        istio:
+          virtualServices:
+            - name: my-vs
+      workload.stateless.strategy.canary.stableService: ""
+      workload.stateless.strategy.canary.canaryService: my-canary
+    asserts:
+      - failedTemplate:
+          errorMessage: "workload.stateless.strategy.canary.stableService is required when trafficRouting is configured"
+
+  - it: fails when canary trafficRouting set without canaryService
+    set:
+      workload.stateless.strategy.type: canary
+      workload.stateless.strategy.canary.trafficRouting:
+        istio:
+          virtualServices:
+            - name: my-vs
+      workload.stateless.strategy.canary.stableService: my-stable
+      workload.stateless.strategy.canary.canaryService: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "workload.stateless.strategy.canary.canaryService is required when trafficRouting is configured"
+
+  - it: fails when autoscaling enabled with no metrics configured
+    set:
+      workload.autoscaling.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "workload.autoscaling requires at least one of targetCpuUtilization, targetMemoryUtilization, or metrics"
+
+  - it: fails when autoscaling minReplicas exceeds maxReplicas
+    set:
+      workload.autoscaling.enabled: true
+      workload.autoscaling.minReplicas: 10
+      workload.autoscaling.maxReplicas: 2
+      workload.autoscaling.targetCpuUtilization: 70
+    asserts:
+      - failedTemplate:
+          errorMessage: "workload.autoscaling.minReplicas (10) must be <= maxReplicas (2)"
+
+  - it: fails when httpRoute enabled without parentRef.name
+    set:
+      network.httpRoute.internal.enabled: true
+      network.httpRoute.internal.parentRef.name: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "network.httpRoute.internal.parentRef.name is required when the route is enabled"
+
+  - it: fails when grpcRoute enabled without parentRef.name
+    set:
+      network.grpcRoute.external.enabled: true
+      network.grpcRoute.external.parentRef.name: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "network.grpcRoute.external.parentRef.name is required when the route is enabled"
+
+  - it: fails when externalSecrets enabled without secretStoreRef.name
+    set:
+      config.externalSecrets.enabled: true
+      config.externalSecrets.secretStoreRef.name: ""
+      config.externalSecrets.data:
+        - secretKey: KEY
+          remoteRef:
+            key: /path
+    asserts:
+      - failedTemplate:
+          errorMessage: "config.externalSecrets.secretStoreRef.name is required when externalSecrets is enabled"
+
+  - it: fails when externalSecrets enabled without data or dataFrom
+    set:
+      config.externalSecrets.enabled: true
+      config.externalSecrets.secretStoreRef.name: my-store
+    asserts:
+      - failedTemplate:
+          errorMessage: "config.externalSecrets requires at least one of data or dataFrom"
+
+  - it: fails when analysis template has no metrics
+    set:
+      workload.stateless.analysis.templates:
+        - name: my-analysis
+          args:
+            - name: service-name
+    asserts:
+      - failedTemplate:
+          errorMessage: "workload.stateless.analysis.templates[my-analysis].metrics is required"
+
+  - it: passes with valid default values
+    asserts:
+      - notFailedTemplate: {}

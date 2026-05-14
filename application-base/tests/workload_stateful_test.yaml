@@ -1,0 +1,86 @@
+suite: stateful workload
+templates:
+  - templates/statefulset.yaml
+
+tests:
+  - it: renders a StatefulSet when type is stateful
+    set:
+      workload.type: stateful
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.podManagementPolicy
+          value: OrderedReady
+      - equal:
+          path: spec.updateStrategy.type
+          value: RollingUpdate
+
+  - it: does not render when type is stateless
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders volumeClaimTemplates
+    set:
+      workload.type: stateful
+      workload.stateful.volumeClaimTemplates:
+        - metadata:
+            name: data
+          spec:
+            accessModes:
+              - ReadWriteOnce
+            resources:
+              requests:
+                storage: 10Gi
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: data
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 10Gi
+
+  - it: sets Parallel podManagementPolicy
+    set:
+      workload.type: stateful
+      workload.stateful.podManagementPolicy: Parallel
+    asserts:
+      - equal:
+          path: spec.podManagementPolicy
+          value: Parallel
+
+  - it: uses headless service name when headlessService is enabled
+    set:
+      workload.type: stateful
+      network.headlessService.enabled: true
+    asserts:
+      - matchRegex:
+          path: spec.serviceName
+          pattern: .*-headless$
+
+  - it: uses regular service name when headlessService is disabled
+    set:
+      workload.type: stateful
+      network.headlessService.enabled: false
+    asserts:
+      - notMatchRegex:
+          path: spec.serviceName
+          pattern: .*-headless$
+
+  - it: omits replicas when autoscaling is enabled
+    set:
+      workload.type: stateful
+      workload.autoscaling.enabled: true
+      workload.autoscaling.targetCpuUtilization: 70
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: renders automountServiceAccountToken false
+    set:
+      workload.type: stateful
+    asserts:
+      - equal:
+          path: spec.template.spec.automountServiceAccountToken
+          value: false

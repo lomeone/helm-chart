@@ -1,0 +1,107 @@
+suite: network resources
+
+tests:
+  - it: renders a ClusterIP Service by default
+    templates:
+      - templates/service.yaml
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.type
+          value: ClusterIP
+
+  - it: renders Service ports
+    templates:
+      - templates/service.yaml
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+      - equal:
+          path: spec.ports[0].targetPort
+          value: http
+
+  - it: renders an internal HTTPRoute when enabled
+    templates:
+      - templates/httproute.yaml
+    set:
+      network.httpRoute.internal.enabled: true
+      network.httpRoute.internal.parentRef.name: internal-gateway
+      network.httpRoute.internal.parentRef.namespace: istio-gateway
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: HTTPRoute
+      - equal:
+          path: spec.parentRefs[0].name
+          value: internal-gateway
+      - equal:
+          path: spec.parentRefs[0].namespace
+          value: istio-gateway
+
+  - it: renders HTTPRoute hostnames
+    templates:
+      - templates/httproute.yaml
+    set:
+      network.httpRoute.internal.enabled: true
+      network.httpRoute.internal.parentRef.name: internal-gateway
+      network.httpRoute.internal.hostnames:
+        - app.internal.example.com
+    asserts:
+      - contains:
+          path: spec.hostnames
+          content: app.internal.example.com
+
+  - it: renders default backendRef when no rules configured
+    templates:
+      - templates/httproute.yaml
+    set:
+      network.httpRoute.internal.enabled: true
+      network.httpRoute.internal.parentRef.name: internal-gateway
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 80
+
+  - it: renders an internal GRPCRoute when enabled
+    templates:
+      - templates/grpcroute.yaml
+    set:
+      network.grpcRoute.internal.enabled: true
+      network.grpcRoute.internal.parentRef.name: internal-gateway
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: GRPCRoute
+      - equal:
+          path: spec.parentRefs[0].name
+          value: internal-gateway
+
+  - it: does not render HTTPRoute when disabled
+    templates:
+      - templates/httproute.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render GRPCRoute when disabled
+    templates:
+      - templates/grpcroute.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders both internal and external HTTPRoutes when both enabled
+    templates:
+      - templates/httproute.yaml
+    set:
+      network.httpRoute.internal.enabled: true
+      network.httpRoute.internal.parentRef.name: internal-gateway
+      network.httpRoute.external.enabled: true
+      network.httpRoute.external.parentRef.name: external-gateway
+    asserts:
+      - hasDocuments:
+          count: 2

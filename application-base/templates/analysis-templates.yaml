@@ -22,6 +22,6 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   metrics:
-    {{- toYaml (required "workload.stateless.analysis.templates[].metrics is required" .metrics) | nindent 4 }}
+    {{- toYaml .metrics | nindent 4 }}
 {{- end }}
 {{- end }}

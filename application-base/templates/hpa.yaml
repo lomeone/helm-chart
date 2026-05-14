@@ -1,7 +1,4 @@
 {{- if and .Values.workload.enabled .Values.workload.autoscaling.enabled }}
-{{- if and (not .Values.workload.autoscaling.targetCpuUtilization) (not .Values.workload.autoscaling.targetMemoryUtilization) (not .Values.workload.autoscaling.metrics) }}
-{{- fail "workload.autoscaling requires at least one of targetCpuUtilization, targetMemoryUtilization, or metrics" }}
-{{- end }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

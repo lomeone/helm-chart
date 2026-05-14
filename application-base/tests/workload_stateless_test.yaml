@@ -1,0 +1,145 @@
+suite: stateless workload
+templates:
+  - templates/rollout.yaml
+
+tests:
+  - it: renders a Rollout with rollingUpdate strategy by default
+    asserts:
+      - isKind:
+          of: Rollout
+      - equal:
+          path: spec.strategy.canary.maxSurge
+          value: "25%"
+      - equal:
+          path: spec.strategy.canary.maxUnavailable
+          value: "25%"
+
+  - it: sets the correct image
+    set:
+      workload.image.repository: ghcr.io/example/app
+      workload.image.tag: "2.0.0"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "ghcr.io/example/app:2.0.0"
+
+  - it: renders canary strategy with steps
+    set:
+      workload.stateless.strategy.type: canary
+      workload.stateless.strategy.canary.steps:
+        - setWeight: 20
+        - pause:
+            duration: 5m
+    asserts:
+      - equal:
+          path: spec.strategy.canary.steps[0].setWeight
+          value: 20
+      - equal:
+          path: spec.strategy.canary.steps[1].pause.duration
+          value: 5m
+
+  - it: renders canary stableService and canaryService
+    set:
+      workload.stateless.strategy.type: canary
+      workload.stateless.strategy.canary.stableService: my-stable
+      workload.stateless.strategy.canary.canaryService: my-canary
+    asserts:
+      - equal:
+          path: spec.strategy.canary.stableService
+          value: my-stable
+      - equal:
+          path: spec.strategy.canary.canaryService
+          value: my-canary
+
+  - it: renders blueGreen strategy
+    set:
+      workload.stateless.strategy.type: blueGreen
+    asserts:
+      - exists:
+          path: spec.strategy.blueGreen
+      - equal:
+          path: spec.strategy.blueGreen.autoPromotionEnabled
+          value: true
+
+  - it: renders blueGreen with prePromotionAnalysis
+    set:
+      workload.stateless.strategy.type: blueGreen
+      workload.stateless.strategy.blueGreen.prePromotionAnalysis.enabled: true
+      workload.stateless.strategy.blueGreen.prePromotionAnalysis.templates:
+        - templateName: smoke-test
+    asserts:
+      - exists:
+          path: spec.strategy.blueGreen.prePromotionAnalysis
+
+  - it: omits replicas when autoscaling is enabled
+    set:
+      workload.autoscaling.enabled: true
+      workload.autoscaling.targetCpuUtilization: 70
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: sets replicas when autoscaling is disabled
+    set:
+      workload.replicas: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: renders pod annotations
+    set:
+      workload.podAnnotations:
+        prometheus.io/scrape: "true"
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations["prometheus.io/scrape"]
+          value: "true"
+
+  - it: renders initContainers
+    set:
+      workload.initContainers:
+        - name: init
+          image: busybox:1.36
+          command: ["sh", "-c", "echo ready"]
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: init
+
+  - it: renders extraContainers as sidecar
+    set:
+      workload.extraContainers:
+        - name: sidecar
+          image: busybox:1.36
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: sidecar
+
+  - it: renders resource requests and limits
+    set:
+      workload.resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          memory: 512Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 100m
+
+  - it: does not render rollout when workload is disabled
+    set:
+      workload.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: does not render rollout when type is stateful
+    set:
+      workload.type: stateful
+    asserts:
+      - hasDocuments:
+          count: 0

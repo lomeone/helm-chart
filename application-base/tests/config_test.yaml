@@ -1,0 +1,114 @@
+suite: config resources
+
+tests:
+  - it: renders ConfigMap when enabled
+    templates:
+      - templates/configmap.yaml
+    set:
+      config.configMap.enabled: true
+      config.configMap.data:
+        APP_ENV: production
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: data.APP_ENV
+          value: production
+
+  - it: does not render ConfigMap when disabled
+    templates:
+      - templates/configmap.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: renders ExternalSecret when enabled
+    templates:
+      - templates/externalsecret.yaml
+    set:
+      config.externalSecrets.enabled: true
+      config.externalSecrets.secretStoreRef.name: platform-secrets
+      config.externalSecrets.data:
+        - secretKey: DB_URL
+          remoteRef:
+            key: app/db-url
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ExternalSecret
+      - equal:
+          path: spec.secretStoreRef.name
+          value: platform-secrets
+
+  - it: does not render ExternalSecret when disabled
+    templates:
+      - templates/externalsecret.yaml
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: adds configMapRef to envFrom when configMap enabled without mount
+    templates:
+      - templates/rollout.yaml
+    set:
+      config.configMap.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: RELEASE-NAME-application-base
+
+  - it: adds secretRef to envFrom when externalSecrets envFrom is enabled
+    templates:
+      - templates/rollout.yaml
+    set:
+      config.externalSecrets.enabled: true
+      config.externalSecrets.secretStoreRef.name: my-store
+      config.externalSecrets.data:
+        - secretKey: KEY
+          remoteRef:
+            key: /path
+      config.externalSecrets.envFrom.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            secretRef:
+              name: RELEASE-NAME-application-base
+
+  - it: mounts configMap as volume when mount is enabled
+    templates:
+      - templates/rollout.yaml
+    set:
+      config.configMap.enabled: true
+      config.configMap.mount.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: config
+            configMap:
+              name: RELEASE-NAME-application-base
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: config
+            mountPath: /config
+            readOnly: true
+
+  - it: does not add configMapRef when configMap is mounted
+    templates:
+      - templates/rollout.yaml
+    set:
+      config.configMap.enabled: true
+      config.configMap.mount.enabled: true
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: RELEASE-NAME-application-base

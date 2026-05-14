@@ -1,0 +1,4 @@
+workload:
+  image:
+    repository: ghcr.io/example/myapp
+    tag: "1.0.0"
