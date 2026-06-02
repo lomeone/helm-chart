@@ -53,9 +53,8 @@ jobs:
       - name: Push to ECR
         run: |
           REGISTRY="${{ steps.ecr-login.outputs.registry }}"
-          REPOSITORY="${{ vars.ECR_REPOSITORY }}"
           helm push /tmp/helm-packages/${{ env.CHART_DIR }}-${{ steps.version.outputs.version }}.tgz \
-            oci://${REGISTRY}/${REPOSITORY}
+            oci://${REGISTRY}
 
       - name: Summary
         run: |
