@@ -44,7 +44,7 @@ jobs:
 
       - name: Run helm-unittest
         run: |
-          helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false
+          helm plugin install https://github.com/helm-unittest/helm-unittest.git
           helm unittest ${{ env.CHART_DIR }}
 
       - name: Package Helm chart
