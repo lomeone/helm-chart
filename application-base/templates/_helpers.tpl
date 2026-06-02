@@ -11,7 +11,7 @@ Create a default fully qualified app name.
 {{- define "application-base.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else if .Values.global.env -}}
+{{- else if (.Values.global).env -}}
 {{- $prefix := printf "%s-" .Values.global.env -}}
 {{- if hasPrefix $prefix .Release.Name -}}
 {{- .Release.Name | trunc 63 | trimSuffix "-" -}}

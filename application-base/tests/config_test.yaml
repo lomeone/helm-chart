@@ -60,7 +60,7 @@ tests:
           path: spec.template.spec.containers[0].envFrom
           content:
             configMapRef:
-              name: RELEASE-NAME-application-base
+              name: RELEASE-NAME
 
   - it: adds secretRef to envFrom when externalSecrets envFrom is enabled
     templates:
@@ -78,7 +78,7 @@ tests:
           path: spec.template.spec.containers[0].envFrom
           content:
             secretRef:
-              name: RELEASE-NAME-application-base
+              name: RELEASE-NAME
 
   - it: mounts configMap as volume when mount is enabled
     templates:
@@ -92,7 +92,7 @@ tests:
           content:
             name: config
             configMap:
-              name: RELEASE-NAME-application-base
+              name: RELEASE-NAME
       - contains:
           path: spec.template.spec.containers[0].volumeMounts
           content:
@@ -111,4 +111,4 @@ tests:
           path: spec.template.spec.containers[0].envFrom
           content:
             configMapRef:
-              name: RELEASE-NAME-application-base
+              name: RELEASE-NAME
