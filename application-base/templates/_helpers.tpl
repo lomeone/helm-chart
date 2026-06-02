@@ -11,13 +11,15 @@ Create a default fully qualified app name.
 {{- define "application-base.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}
-{{- else -}}
-{{- $name := default .Chart.Name .Values.nameOverride -}}
-{{- if contains $name .Release.Name -}}
+{{- else if .Values.global.env -}}
+{{- $prefix := printf "%s-" .Values.global.env -}}
+{{- if hasPrefix $prefix .Release.Name -}}
 {{- .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- else -}}
-{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- printf "%s-%s" .Values.global.env .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+{{- else -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end -}}
 
@@ -141,6 +143,96 @@ Build pod volumes field block.
 volumes:
   {{- toYaml . | trimSuffix "\n" | nindent 2 }}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Common pod spec shared by Rollout and StatefulSet.
+Designed to be included with nindent 6 (spec: is at indent 4).
+*/}}
+{{- define "application-base.podSpec" -}}
+serviceAccountName: {{ include "application-base.serviceAccountName" . }}
+automountServiceAccountToken: {{ .Values.accessControl.serviceAccount.automountServiceAccountToken }}
+{{- with .Values.workload.image.pullSecrets }}
+imagePullSecrets:
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+{{- end }}
+{{- with .Values.workload.podSecurityContext }}
+securityContext:
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+{{- end }}
+{{- with .Values.workload.priorityClassName }}
+priorityClassName: {{ . | quote }}
+{{- end }}
+{{- if .Values.workload.terminationGracePeriodSeconds }}
+terminationGracePeriodSeconds: {{ .Values.workload.terminationGracePeriodSeconds }}
+{{- end }}
+{{- with .Values.workload.initContainers }}
+initContainers:
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+{{- end }}
+containers:
+  - name: {{ include "application-base.name" . }}
+    image: {{ include "application-base.image" . | quote }}
+    imagePullPolicy: {{ .Values.workload.image.pullPolicy }}
+    {{- with .Values.workload.command }}
+    command:
+      {{- toYaml . | trimSuffix "\n" | nindent 6 }}
+    {{- end }}
+    {{- with .Values.workload.args }}
+    args:
+      {{- toYaml . | trimSuffix "\n" | nindent 6 }}
+    {{- end }}
+    {{- with .Values.workload.ports }}
+    ports:
+      {{- toYaml . | trimSuffix "\n" | nindent 6 }}
+    {{- end }}
+    {{- with include "application-base.containerEnvBlock" . }}{{- . | nindent 4 }}{{- end }}
+    {{- with include "application-base.containerEnvFromBlock" . }}{{- . | nindent 4 }}{{- end }}
+    {{- with .Values.workload.resources }}
+    resources:
+      {{- toYaml . | trimSuffix "\n" | nindent 6 }}
+    {{- end }}
+    {{- with .Values.workload.securityContext }}
+    securityContext:
+      {{- toYaml . | trimSuffix "\n" | nindent 6 }}
+    {{- end }}
+    {{- with .Values.workload.readinessProbe }}
+    readinessProbe:
+      {{- toYaml . | trimSuffix "\n" | nindent 6 }}
+    {{- end }}
+    {{- with .Values.workload.livenessProbe }}
+    livenessProbe:
+      {{- toYaml . | trimSuffix "\n" | nindent 6 }}
+    {{- end }}
+    {{- with .Values.workload.startupProbe }}
+    startupProbe:
+      {{- toYaml . | trimSuffix "\n" | nindent 6 }}
+    {{- end }}
+    {{- with .Values.workload.lifecycle }}
+    lifecycle:
+      {{- toYaml . | trimSuffix "\n" | nindent 6 }}
+    {{- end }}
+    {{- with include "application-base.containerVolumeMountsBlock" . }}{{- . | nindent 4 }}{{- end }}
+  {{- with .Values.workload.extraContainers }}
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+  {{- end }}
+{{- with include "application-base.podVolumesBlock" . }}{{- . | nindent 0 }}{{- end }}
+{{- with .Values.workload.nodeSelector }}
+nodeSelector:
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+{{- end }}
+{{- with .Values.workload.affinity }}
+affinity:
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+{{- end }}
+{{- with .Values.workload.tolerations }}
+tolerations:
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+{{- end }}
+{{- with .Values.workload.topologySpreadConstraints }}
+topologySpreadConstraints:
+  {{- toYaml . | trimSuffix "\n" | nindent 2 }}
+{{- end }}
 {{- end -}}
 
 {{/*

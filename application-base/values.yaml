@@ -245,5 +245,3 @@ config:
     labels: {}
     envFrom:
       enabled: false
-
-extraManifests: []

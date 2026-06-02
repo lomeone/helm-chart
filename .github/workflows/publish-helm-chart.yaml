@@ -1,0 +1,68 @@
+name: Publish Helm Chart to ECR
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  CHART_DIR: application-base
+
+jobs:
+  publish:
+    name: Package and push to ECR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Log in to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: private
+
+      - name: Extract chart version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Sync Chart.yaml version with tag
+        run: |
+          sed -i "s/^version:.*/version: ${{ steps.version.outputs.version }}/" \
+            ${{ env.CHART_DIR }}/Chart.yaml
+
+      - name: Run helm-unittest
+        run: |
+          helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false
+          helm unittest ${{ env.CHART_DIR }}
+
+      - name: Package Helm chart
+        run: helm package ${{ env.CHART_DIR }} --destination /tmp/helm-packages
+
+      - name: Push to ECR
+        run: |
+          REGISTRY="${{ steps.ecr-login.outputs.registry }}"
+          REPOSITORY="${{ vars.ECR_REPOSITORY }}"
+          helm push /tmp/helm-packages/${{ env.CHART_DIR }}-${{ steps.version.outputs.version }}.tgz \
+            oci://${REGISTRY}/${REPOSITORY}
+
+      - name: Summary
+        run: |
+          echo "### Published :rocket:" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Chart | \`${{ env.CHART_DIR }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Version | \`${{ steps.version.outputs.version }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Registry | \`${{ steps.ecr-login.outputs.registry }}/${{ vars.ECR_REPOSITORY }}\` |" >> "$GITHUB_STEP_SUMMARY"
